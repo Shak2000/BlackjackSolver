@@ -116,6 +116,10 @@ class Game:
 
     def dealer_play(self):
         """Dealer plays according to standard rules: hit on 16, stand on 17"""
+        # Added a check here: dealer doesn't play if player already busted.
+        if self.value(self.player) > 21: # NEW: Don't let dealer play if player busted
+            return
+
         while self.value(self.dealer) < 17:
             if not self.take(self.dealer):
                 break
@@ -128,9 +132,9 @@ class Game:
         if player_value > 21:
             return -1
 
-        # Dealer plays
+        # Dealer plays - this is for simulation to get the result, not modifying the actual game.dealer
         temp_game = copy.deepcopy(self)
-        temp_game.dealer_play()
+        temp_game.dealer_play() # This will now respect the player_busted check within dealer_play() if it's a deepcopy
         dealer_value = temp_game.value(temp_game.dealer)
 
         # Dealer busted

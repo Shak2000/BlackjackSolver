@@ -30,26 +30,9 @@ async def new_game():
 
 @app.get("/game_state")
 async def get_game_state():
-    # Determine if the game is over.
-    # It's over if player busted, or player stood, or dealer played out.
-    is_game_over = False
     player_busted = game.value(game.player) > 21
-    player_stood = len(game.move_history) > 0 and game.move_history[-1] == 'stand'
-
-    # If the game result is already decided (e.g., player bust or blackjack, or after dealer plays)
-    # The `game_result()` method in `main.py` implicitly triggers dealer_play for evaluation,
-    # but the actual `game.dealer` state might not reflect it unless `dealer_play()` is called.
-    # For a robust `game_over` check, we need to know if the game logic has concluded.
-    # The simplest is to check if player_busted or if the last action was stand, and if so,
-    # the game is essentially "over" for display purposes.
-    if player_busted or player_stood:
-        is_game_over = True
-    elif game.game_result() != None and game.move_history and game.move_history[-1] == 'dealer_finished':
-        # This is a placeholder; you might need to adjust `main.py`
-        # to explicitly mark when the dealer has finished their turn
-        # if you want a server-side state for dealer finishing without player standing.
-        # For now, we rely on client-side to call dealer_play() and then check results.
-        pass
+    # Check if the game is over. It's over if player busted, or player stood.
+    is_game_over = player_busted or (len(game.move_history) > 0 and game.move_history[-1] == 'stand')
 
     return {
         "player": game.player,
@@ -75,30 +58,39 @@ async def get_player_value():
 
 @app.post("/dealer_play")
 async def dealer_play():
-    # Calling dealer_play here modifies the game.dealer state
-    game.dealer_play()
-    # After dealer plays, the game is over for sure.
-    # We should update the `game_over` state in the `Game` class if you want a persistent server-side state for it.
-    # For now, let's ensure the client always gets the updated dealer hand when this is called.
+    # Only allow dealer to play if the game is NOT already over by player bust/blackjack/stand
+    player_value = game.value(game.player)
+    player_busted = player_value > 21
+    player_blackjack = player_value == 21
+    player_stood = len(game.move_history) > 0 and game.move_history[-1] == 'stand'
+
+    # Dealer should only play if player hasn't busted/got blackjack AND player has stood.
+    # If the player busts, the dealer doesn't need to play.
+    # If the player gets blackjack, the dealer still needs to play to check for a push.
+    if not player_busted and player_stood:
+        game.dealer_play()
+    elif player_blackjack and not player_stood:  # If player has 21 but hasn't stood, they might hit again.
+        # This case implies player might have hit to 21, and then computer decided.
+        # The game_result call later will handle the dealer's action if necessary for a 21.
+        pass  # Dealer doesn't explicitly 'play' here through this endpoint, game_result handles it.
+
     return {"status": "success"}
 
 
 @app.get("/game_result")
 async def game_result():
     # This will implicitly cause dealer to play if needed for result calculation in main.py Game.game_result()
-    # but doesn't persist the dealer's final hand in the `game` object unless `dealer_play()` was called.
+    # However, the dealer's *actual hand* in `game.dealer` on the server needs to be updated by `dealer_play()`.
+    # The `main.py` game_result already calls `temp_game.dealer_play()`, which is good for the result,
+    # but the `game.dealer` state itself might not be updated unless `dealer_play()` is explicitly called on `game`.
+    # Since `dealer_play` endpoint is called before `game_result` in `script.js` for "stand",
+    # and the new `player_hit` logic will skip `dealer_play` for busts, this should be fine.
     return {"result": game.game_result()}
 
 
 @app.post("/player_hit")
 async def player_hit():
     success = game.player_hit()
-    # If player busts, the game is over.
-    if game.value(game.player) > 21:
-        # In main.py, you don't explicitly set a game.game_over flag.
-        # This will be handled by the frontend's playerHit logic setting gameState.gameOver
-        # and then calling dealerPlay.
-        pass
     return {"success": success}
 
 
@@ -116,10 +108,8 @@ async def undo_move():
 
 @app.get("/mcts_simulate")
 async def mcts_simulate():
-    action, children = game.mcts_simulate(100)
+    action, children = game.mcts_simulate(100)  #
     return {
         "action": action,
-        # Only pass the action, not the children details, to the UI
-        # This will prevent the UI from displaying them, even if it tries.
-        "children": []  # Send an empty list for children
+        "children": []  # Always return empty children to prevent display
     }
