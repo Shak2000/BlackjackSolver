@@ -184,10 +184,9 @@ class Game:
         """Get a string representation of the current game state"""
         return f"Player: {self.player}, Dealer: {self.dealer[0]}X"
 
-    def mcts_simulate(self, simulations=50):
+    def mcts_simulate(self, simulations=100):
         """Run MCTS simulation to determine best action"""
         root = MCTSNode(copy.deepcopy(self))
-        root.game_state.deck.shuffle()
 
         for _ in range(simulations):
             # Selection
@@ -202,7 +201,8 @@ class Game:
 
             # Simulation
             temp_game = copy.deepcopy(node.game_state)
-            temp_game.deck.shuffle()
+            # Shuffle the deck to avoid perfect information
+            random.shuffle(temp_game.deck.cards)
 
             # If we just hit, check if we busted
             if node.action == 'hit' and temp_game.value(temp_game.player) > 21:
@@ -223,9 +223,15 @@ class Game:
             # Backpropagation
             node.backup(result)
 
-        # Return the action with the highest win rate
+        # Return the action with the highest win rate, favoring 'stand' on ties
         if root.children:
-            best_child = max(root.children, key=lambda c: c.wins / c.visits if c.visits > 0 else 0)
+            def selection_key(child):
+                win_rate = child.wins / child.visits if child.visits > 0 else 0
+                # Add small bonus for 'stand' to break ties
+                tie_breaker = 0.0001 if child.action == 'stand' else 0
+                return win_rate + tie_breaker
+
+            best_child = max(root.children, key=selection_key)
             return best_child.action, root.children
         else:
             return 'stand', []
