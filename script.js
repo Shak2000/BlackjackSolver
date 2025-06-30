@@ -20,7 +20,7 @@ const elements = {
     newGameBtn: document.getElementById('new-game-btn'),
     mctsResults: document.getElementById('mcts-results'),
     mctsRecommendation: document.getElementById('mcts-recommendation'),
-    mctsChildren: document.getElementById('mcts-children'),
+    mctsChildren: document.getElementById('mcts-children'), // This element will be cleared
     gameStatus: document.getElementById('game-status'),
     moveHistory: document.getElementById('move-history')
 };
@@ -106,8 +106,9 @@ function updateDisplay() {
     } else {
         gameState.dealer.forEach((card, index) => {
             const cardDiv = document.createElement('div');
-            if (index === 1 && !gameState.gameOver) {
-                // Hide dealer's second card
+            // Reveal all dealer cards if game is over
+            // The logic here is already correct: if gameState.gameOver is true, all cards are shown.
+            if (index === 1 && !gameState.gameOver) { //
                 cardDiv.className = 'card hidden';
                 cardDiv.textContent = '?';
             } else {
@@ -117,12 +118,12 @@ function updateDisplay() {
             elements.dealerHand.appendChild(cardDiv);
         });
 
-        if (gameState.gameOver) {
-            elements.dealerValue.textContent = `Value: ${calculateHandValue(gameState.dealer)}`;
+        if (gameState.gameOver) { //
+            elements.dealerValue.textContent = `Value: ${calculateHandValue(gameState.dealer)}`; //
         } else {
             // Show only first card value
-            const visibleValue = gameState.dealer.length > 0 ? calculateHandValue([gameState.dealer[0]]) : 0;
-            elements.dealerValue.textContent = `Value: ${visibleValue}`;
+            const visibleValue = gameState.dealer.length > 0 ? calculateHandValue([gameState.dealer[0]]) : 0; //
+            elements.dealerValue.textContent = `Value: ${visibleValue}`; //
         }
     }
 
@@ -180,20 +181,21 @@ async function makeApiCall(endpoint, method = 'GET', data = null) {
 // Game actions
 async function newGame() {
     try {
-        await makeApiCall('/new_game', 'POST');
+        await makeApiCall('/new_game', 'POST'); //
 
         // Reset local state
-        gameState.player = [];
-        gameState.dealer = [];
-        gameState.moveHistory = [];
-        gameState.gameOver = false;
+        gameState.player = []; //
+        gameState.dealer = []; //
+        gameState.moveHistory = []; //
+        gameState.gameOver = false; //
         gameState.gameStarted = true;
 
         // Get the initial game state after new game
-        await getGameState();
+        await getGameState(); //
         updateStatus('New game started! Make your move.');
-        elements.mctsResults.style.display = 'none';
-        updateDisplay();
+        // Ensure MCTS results section is hidden at the start of a new game
+        elements.mctsResults.style.display = 'none'; //
+        updateDisplay(); //
     } catch (error) {
         console.error('Error starting new game:', error);
     }
@@ -201,23 +203,23 @@ async function newGame() {
 
 async function playerHit() {
     try {
-        await makeApiCall('/player_hit', 'POST');
-        await getGameState();
+        await makeApiCall('/player_hit', 'POST'); //
+        await getGameState(); //
 
-        const playerValue = calculateHandValue(gameState.player);
+        const playerValue = calculateHandValue(gameState.player); //
         if (playerValue > 21) {
-            gameState.gameOver = true;
-            await dealerPlay();
-            await checkGameResult();
+            gameState.gameOver = true; //
+            await dealerPlay(); // Ensure dealer's hand is revealed
+            await checkGameResult(); //
         } else if (playerValue === 21) {
-            gameState.gameOver = true;
-            await dealerPlay();
-            await checkGameResult();
+            gameState.gameOver = true; //
+            await dealerPlay(); // Ensure dealer's hand is revealed
+            await checkGameResult(); //
         } else {
             updateStatus('Card taken. Make your next move.');
         }
 
-        updateDisplay();
+        updateDisplay(); // This call happens after the dealerPlay(), so it should be correct
     } catch (error) {
         console.error('Error hitting:', error);
     }
@@ -225,11 +227,11 @@ async function playerHit() {
 
 async function playerStand() {
     try {
-        await makeApiCall('/player_stand', 'POST');
-        gameState.gameOver = true;
-        await dealerPlay();
-        await checkGameResult();
-        updateDisplay();
+        await makeApiCall('/player_stand', 'POST'); //
+        gameState.gameOver = true; //
+        await dealerPlay(); //
+        await checkGameResult(); //
+        updateDisplay(); //
     } catch (error) {
         console.error('Error standing:', error);
     }
@@ -237,8 +239,8 @@ async function playerStand() {
 
 async function dealerPlay() {
     try {
-        await makeApiCall('/dealer_play', 'POST');
-        await getGameState();
+        await makeApiCall('/dealer_play', 'POST'); //
+        await getGameState(); //
     } catch (error) {
         console.error('Error with dealer play:', error);
     }
@@ -246,7 +248,7 @@ async function dealerPlay() {
 
 async function checkGameResult() {
     try {
-        const result = await makeApiCall('/game_result');
+        const result = await makeApiCall('/game_result'); //
         if (result && typeof result.result !== 'undefined') {
             const gameResult = result.result;
 
@@ -265,10 +267,10 @@ async function checkGameResult() {
 
 async function undoMove() {
     try {
-        await makeApiCall('/undo_move', 'POST');
-        await getGameState();
+        await makeApiCall('/undo_move', 'POST'); //
+        await getGameState(); //
         updateStatus('Move undone.');
-        updateDisplay();
+        updateDisplay(); //
     } catch (error) {
         console.error('Error undoing move:', error);
     }
@@ -277,97 +279,75 @@ async function undoMove() {
 async function letComputerDecide() {
     try {
         updateStatus('Computer is thinking... 🤔');
-        elements.computerBtn.disabled = true;
+        elements.computerBtn.disabled = true; //
 
-        const result = await makeApiCall('/mcts_simulate');
+        const result = await makeApiCall('/mcts_simulate'); //
         if (result && result.action) {
-            const { action, children } = result;
+            const { action } = result; // Only get the action, not children
 
-            // Display MCTS results
-            displayMCTSResults(action, children);
+            // Display MCTS recommendation, hiding detailed results
+            displayMCTSRecommendation(action); //
 
             // Execute the recommended action
             if (action === 'hit') {
-                await playerHit();
+                await playerHit(); //
             } else {
-                await playerStand();
+                await playerStand(); //
             }
         }
     } catch (error) {
         console.error('Error with computer decision:', error);
         updateStatus('Error getting computer recommendation');
     } finally {
-        elements.computerBtn.disabled = false;
+        elements.computerBtn.disabled = false; //
     }
 }
 
 // Get current game state from the backend
 async function getGameState() {
     try {
-        const result = await makeApiCall('/game_state');
+        const result = await makeApiCall('/game_state'); //
         if (result) {
-            gameState.player = result.player || [];
-            gameState.dealer = result.dealer || [];
-            gameState.moveHistory = result.move_history || [];
-            gameState.gameOver = result.game_over || false;
+            gameState.player = result.player || []; //
+            gameState.dealer = result.dealer || []; //
+            gameState.moveHistory = result.move_history || []; //
+            gameState.gameOver = result.game_over || false; //
         }
     } catch (error) {
         console.error('Error getting game state:', error);
     }
 }
 
-// Generate demo cards for display (since we can't easily get them from backend)
-function generateDemoCards(count) {
-    const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'];
-    const suits = ['c', 'd', 'h', 's'];
-    const cards = [];
-
-    for (let i = 0; i < count; i++) {
-        const rank = ranks[Math.floor(Math.random() * ranks.length)];
-        const suit = suits[Math.floor(Math.random() * suits.length)];
-        cards.push(rank + suit);
-    }
-
-    return cards;
-}
-
-function displayMCTSResults(recommendedAction, children) {
+// Modified to only show recommendation, not simulation results
+function displayMCTSRecommendation(recommendedAction) {
     elements.mctsRecommendation.innerHTML = `
         <strong>Computer recommends: ${recommendedAction.toUpperCase()}</strong>
     `;
-
-    elements.mctsChildren.innerHTML = '';
-    children.forEach(child => {
-        const winRate = child.visits > 0 ? (child.wins / child.visits).toFixed(3) : '0.000';
-        const childDiv = document.createElement('div');
-        childDiv.className = 'mcts-child';
-        childDiv.innerHTML = `
-            <strong>${child.action.toUpperCase()}</strong><br>
-            Visits: ${child.visits}<br>
-            Win Rate: ${winRate}
-        `;
-        elements.mctsChildren.appendChild(childDiv);
-    });
-
-    elements.mctsResults.style.display = 'block';
+    elements.mctsChildren.innerHTML = ''; // Clear children results
+    // Hide the mcts-details div to remove the "Simulation Results:" heading
+    document.querySelector('.mcts-details').style.display = 'none'; // NEW: Hide the simulation details container
+    elements.mctsResults.style.display = 'block'; // Show the overall MCTS section
 }
 
 function updateStatus(message, type = '') {
-    elements.gameStatus.innerHTML = `<p>${message}</p>`;
-    elements.gameStatus.className = `status ${type}`;
+    elements.gameStatus.innerHTML = `<p>${message}</p>`; //
+    elements.gameStatus.className = `status ${type}`; //
 }
 
 // Event listeners
-elements.hitBtn.addEventListener('click', playerHit);
-elements.standBtn.addEventListener('click', playerStand);
-elements.computerBtn.addEventListener('click', letComputerDecide);
-elements.undoBtn.addEventListener('click', undoMove);
-elements.newGameBtn.addEventListener('click', newGame);
+elements.hitBtn.addEventListener('click', playerHit); //
+elements.standBtn.addEventListener('click', playerStand); //
+elements.computerBtn.addEventListener('click', letComputerDecide); //
+elements.undoBtn.addEventListener('click', undoMove); //
+elements.newGameBtn.addEventListener('click', newGame); //
 
 // Initialize game
 async function initializeGame() {
     updateStatus('Click "New Game" to start playing!');
-    updateDisplay();
+    updateDisplay(); //
+    // Ensure the MCTS results and simulation details are hidden on initial load
+    elements.mctsResults.style.display = 'none';
+    document.querySelector('.mcts-details').style.display = 'none'; // NEW: Hide the simulation details container on load
 }
 
 // Start the game when page loads
