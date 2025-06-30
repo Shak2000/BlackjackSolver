@@ -76,7 +76,6 @@ class Game:
         self.deck = Deck()
         self.player = []
         self.dealer = []
-        self.history = []
         self.move_history = []
 
         # Deal initial cards
