@@ -11,7 +11,6 @@
         <h1>Blackjack Solver</h1>
 
         <div class="game-area">
-            <!-- Dealer Section -->
             <div class="dealer-section">
                 <h2>Dealer</h2>
                 <div class="hand" id="dealer-hand">
@@ -21,7 +20,6 @@
                 <div class="hand-value" id="dealer-value">Value: ?</div>
             </div>
 
-            <!-- Player Section -->
             <div class="player-section">
                 <h2>Player</h2>
                 <div class="hand" id="player-hand">
@@ -32,7 +30,6 @@
             </div>
         </div>
 
-        <!-- Game Controls -->
         <div class="controls">
             <button id="hit-btn" class="btn btn-primary">Hit</button>
             <button id="stand-btn" class="btn btn-primary">Stand</button>
@@ -41,22 +38,18 @@
             <button id="new-game-btn" class="btn btn-success">New Game</button>
         </div>
 
-        <!-- MCTS Results -->
         <div class="mcts-results" id="mcts-results" style="display: none;">
             <h3>Computer Analysis (MCTS)</h3>
             <div id="mcts-recommendation"></div>
-            <div class="mcts-details">
-                <h4>Simulation Results:</h4>
+            <div class="mcts-details" id="mcts-details-container"> <h4>Simulation Results:</h4>
                 <div id="mcts-children"></div>
             </div>
         </div>
 
-        <!-- Game Status -->
         <div class="status" id="game-status">
             <p>Welcome to Blackjack! Make your move.</p>
         </div>
 
-        <!-- Move History -->
         <div class="history">
             <h3>Move History</h3>
             <div id="move-history"></div>
