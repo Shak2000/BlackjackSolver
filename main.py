@@ -1,6 +1,5 @@
 import random
 import copy
-from collections import defaultdict
 import math
 
 
@@ -246,6 +245,18 @@ class Game:
         print(f"Dealer showing: {dealer_visible} (Value: {dealer_value})")
         print(f"Moves made: {self.move_history}")
 
+    def ask_play_again(self):
+        """Ask player if they want to play again"""
+        while True:
+            choice = input("\nWould you like to play another game? (y/n): ").strip().lower()
+            if choice in ['y', 'yes']:
+                return True
+            elif choice in ['n', 'no']:
+                print("Thanks for playing!")
+                return False
+            else:
+                print("Please enter 'y' for yes or 'n' for no.")
+
 
 def main():
     game = Game()
@@ -256,7 +267,7 @@ def main():
         # Check if player busted
         if game.value(game.player) > 21:
             print("Player busted! You lose.")
-            if not ask_play_again():
+            if not game.ask_play_again():
                 break
             game.new_game()
             continue
@@ -271,7 +282,7 @@ def main():
                 print("Dealer wins!")
             else:
                 print("Tie!")
-            if not ask_play_again():
+            if not game.ask_play_again():
                 break
             game.new_game()
             continue
@@ -290,7 +301,7 @@ def main():
             if not game.player_hit():
                 print(f"Player cards: {game.player} (Value: {game.value(game.player)})")
                 print("Player busted!")
-                if not ask_play_again():
+                if not game.ask_play_again():
                     break
                 game.new_game()
 
@@ -307,7 +318,7 @@ def main():
             else:
                 print("Tie!")
 
-            if not ask_play_again():
+            if not game.ask_play_again():
                 break
             game.new_game()
 
@@ -333,7 +344,7 @@ def main():
                 if not game.player_hit():
                     print(f"Player cards: {game.player} (Value: {game.value(game.player)})")
                     print("Player busted!")
-                    if not ask_play_again():
+                    if not game.ask_play_again():
                         break
                     game.new_game()
             else:
@@ -349,7 +360,7 @@ def main():
                 else:
                     print("Tie!")
 
-                if not ask_play_again():
+                if not game.ask_play_again():
                     break
                 game.new_game()
 
@@ -369,19 +380,6 @@ def main():
 
         else:
             print("Invalid choice. Please try again.")
-
-
-def ask_play_again():
-    """Ask player if they want to play again"""
-    while True:
-        choice = input("\nWould you like to play another game? (y/n): ").strip().lower()
-        if choice in ['y', 'yes']:
-            return True
-        elif choice in ['n', 'no']:
-            print("Thanks for playing!")
-            return False
-        else:
-            print("Please enter 'y' for yes or 'n' for no.")
 
 
 if __name__ == "__main__":
