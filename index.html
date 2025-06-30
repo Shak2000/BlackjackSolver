@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blackjack Solver</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Blackjack Solver</h1>
+
+        <div class="game-area">
+            <!-- Dealer Section -->
+            <div class="dealer-section">
+                <h2>Dealer</h2>
+                <div class="hand" id="dealer-hand">
+                    <div class="card hidden">?</div>
+                    <div class="card">A♠</div>
+                </div>
+                <div class="hand-value" id="dealer-value">Value: ?</div>
+            </div>
+
+            <!-- Player Section -->
+            <div class="player-section">
+                <h2>Player</h2>
+                <div class="hand" id="player-hand">
+                    <div class="card">K♥</div>
+                    <div class="card">7♦</div>
+                </div>
+                <div class="hand-value" id="player-value">Value: 17</div>
+            </div>
+        </div>
+
+        <!-- Game Controls -->
+        <div class="controls">
+            <button id="hit-btn" class="btn btn-primary">Hit</button>
+            <button id="stand-btn" class="btn btn-primary">Stand</button>
+            <button id="computer-btn" class="btn btn-secondary">Let Computer Decide</button>
+            <button id="undo-btn" class="btn btn-warning">Undo Move</button>
+            <button id="new-game-btn" class="btn btn-success">New Game</button>
+        </div>
+
+        <!-- MCTS Results -->
+        <div class="mcts-results" id="mcts-results" style="display: none;">
+            <h3>Computer Analysis (MCTS)</h3>
+            <div id="mcts-recommendation"></div>
+            <div class="mcts-details">
+                <h4>Simulation Results:</h4>
+                <div id="mcts-children"></div>
+            </div>
+        </div>
+
+        <!-- Game Status -->
+        <div class="status" id="game-status">
+            <p>Welcome to Blackjack! Make your move.</p>
+        </div>
+
+        <!-- Move History -->
+        <div class="history">
+            <h3>Move History</h3>
+            <div id="move-history"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
