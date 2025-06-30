@@ -184,6 +184,9 @@ class Game:
 
     def mcts_simulate(self, simulations=100):
         """Run MCTS simulation to determine best action"""
+        if self.value(self.player) < 12:
+            return 'hit', []
+
         root = MCTSNode(copy.deepcopy(self))
 
         for _ in range(simulations):
@@ -200,7 +203,7 @@ class Game:
             # Simulation
             temp_game = copy.deepcopy(node.game_state)
             # Shuffle the deck to avoid perfect information
-            random.shuffle(temp_game.deck.cards)
+            temp_game.deck.shuffle()
 
             # If we just hit, check if we busted
             if node.action == 'hit' and temp_game.value(temp_game.player) > 21:
@@ -323,19 +326,12 @@ def main():
 
         elif choice == '3':
             print("Computer is thinking...")
-            action = None
-            children = None
+            action, children = game.mcts_simulate(50)
 
-            if game.value(game.player) < 12:
-                action = 'hit'
-                print("Easy choice!")
-            else:
-                action, children = game.mcts_simulate(50)
-
-                print(f"\nMCTS Results after 50 simulations:")
-                for child in children:
-                    win_rate = child.wins / child.visits if child.visits > 0 else 0
-                    print(f"Action: {child.action}, Visits: {child.visits}, Win Rate: {win_rate:.3f}")
+            print(f"\nMCTS Results after 50 simulations:")
+            for child in children:
+                win_rate = child.wins / child.visits if child.visits > 0 else 0
+                print(f"Action: {child.action}, Visits: {child.visits}, Win Rate: {win_rate:.3f}")
 
             print(f"Computer recommends: {action}")
 

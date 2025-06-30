@@ -34,7 +34,7 @@ async def take(hand):
 
 @app.get("/value")
 async def value(hand):
-    game.take(hand)
+    return {"value": game.take(hand)}
 
 
 @app.post("/dealer_play")
@@ -44,7 +44,7 @@ async def dealer_play():
 
 @app.get("/game_result")
 async def game_result():
-    game.game_result()
+    return {"result": game.game_result()}
 
 
 @app.post("/player_hit")
@@ -64,4 +64,8 @@ async def undo_move():
 
 @app.get("/mcts_simulate")
 async def mcts_simulate():
-    game.mcts_simulate()
+    action, children = game.mcts_simulate(100)
+    return {
+        "action": action,
+        "children": [{"action": c.action, "visits": c.visits, "wins": c.wins} for c in children]
+    }
